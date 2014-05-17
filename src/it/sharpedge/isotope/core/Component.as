@@ -1,18 +1,17 @@
-package it.sharpedge.isotope.core.components.base
+package it.sharpedge.isotope.core
 {
 	import flash.errors.IllegalOperationError;
 	
-	import it.sharpedge.isotope.core.components.Transform;
-	import it.sharpedge.isotope.core.GameObject;
 	import it.sharpedge.isotope.core.base.IsotopeObject;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
+	import it.sharpedge.isotope.core.components.Transform;
 
 	use namespace isotopeInternal;
 	
 	public class Component extends IsotopeObject
 	{
-		//TODO: Replace with ID?
-		private var _gameObject : GameObject;
+		//TODO Replace with ID?
+		isotopeInternal var _gameObject : GameObject;
 		
 		isotopeInternal function setGameObject(value:GameObject) : void
 		{
@@ -46,20 +45,36 @@ package it.sharpedge.isotope.core.components.base
 			return GetComponent(Transform) as Transform;
 		}
 		
-		/*public function get display() : DisplayComponent
-		{
-			return _gameObject.get(DisplayComponent) as DisplayComponent;
-		}
-		
-		public function get rigidBody2D() : RigidBody2DComponent
-		{
-			return _gameObject.get(RigidBody2DComponent) as RigidBody2DComponent; 
-		}*/
-		
-		public function GetComponent(type : Class) : Component
+		public function GetComponent(componentType : Class) : Component
 		{
 			if(_gameObject)
-				return _gameObject.GetComponent(type);
+				return _gameObject.GetComponent(componentType);
+			else
+				return null;
+		}
+		
+		public function GetComponents(componentType:Class) : Vector.<Component>
+		{
+			if(_gameObject)
+			{
+				return _gameObject.GetComponents(componentType) as Vector.<Component>;
+			}
+			else
+				return null;
+		}
+		
+		public function GetComponentInChildren(componentType:Class) : Component
+		{
+			if(_gameObject)
+				return _gameObject.GetComponentInChildren(componentType);
+			else
+				return null;
+		}
+		
+		public function GetComponentsInChildren(componentType:Class) : Vector.<Component>
+		{
+			if(_gameObject)
+				return _gameObject.GetComponentsInChildren(componentType) as Vector.<Component>;
 			else
 				return null;
 		}

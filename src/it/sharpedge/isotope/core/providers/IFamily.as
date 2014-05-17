@@ -1,5 +1,6 @@
-package ash.core
+package it.sharpedge.isotope.core.providers
 {
+	import it.sharpedge.isotope.core.GameObject;
 	import it.sharpedge.isotope.core.lists.NodeList;
 
 	/**
@@ -19,25 +20,25 @@ package ash.core
 		 * An entity has been added to the engine. It may already have components so test the entity
 		 * for inclusion in this family's NodeList.
 		 */
-		function newEntity( entity : Entity ) : void;
+		function newGameObject( gameObject: GameObject ) : void;
 		/**
 		 * An entity has been removed from the engine. If it's in this family's NodeList it should be removed.
 		 */
-		function removeEntity( entity : Entity ) : void;
+		function removeGameObject( gameObject: GameObject ) : void;
 		/**
 		 * A component has been added to an entity. Test whether the entity's inclusion in this family's
 		 * NodeList should be modified.
 		 */
-		function componentAddedToEntity( entity : Entity, componentClass : Class ) : void;
+		function componentAddedToGameObject( gameObject: GameObject, componentClass : Class ) : void;
 		/**
 		 * A component has been removed from an entity. Test whether the entity's inclusion in this family's
 		 * NodeList should be modified.
 		 */
-		function componentRemovedFromEntity( entity : Entity, componentClass : Class ) : void;
+		function componentRemovedFromGameObject( gameObject: GameObject, componentClass : Class ) : void;
 		/**
 		 * The family is about to be discarded. Clean up all properties as necessary. Usually, you will
 		 * want to empty the NodeList at this time.
 		 */
-		function cleanUp() : void;
+		function dispose() : void;
 	}
 }

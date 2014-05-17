@@ -1,4 +1,4 @@
-package it.sharpedge.isotope.core.components.base
+package it.sharpedge.isotope.core
 {
 	public class Behaviour extends Component
 	{

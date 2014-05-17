@@ -1,7 +1,7 @@
 package it.sharpedge.isotope.core.base
 {
 	import it.sharpedge.isotope.core.components.Transform;
-	import it.sharpedge.isotope.core.components.base.Component;
+	import it.sharpedge.isotope.core.Component;
 	import it.sharpedge.isotope.core.GameObject;
 
 	use namespace isotopeInternal;

@@ -1,5 +1,7 @@
-package ash.core
+package it.sharpedge.isotope.core
 {
+	import it.sharpedge.isotope.core.base.isotopeInternal;
+
 	/**
 	 * The base class for a system.
 	 * 
@@ -17,16 +19,16 @@ package ash.core
 		/**
 		 * Used internally to manage the list of systems within the engine. The previous system in the list.
 		 */
-		internal var previous : System;
+		isotopeInternal var previous : System;
 		/**
 		 * Used internally to manage the list of systems within the engine. The next system in the list.
 		 */
-		internal var next : System;
+		isotopeInternal var next : System;
 		/**
 		 * Used internally to hold the priority of this system within the system list. This is 
 		 * used to order the systems so they are updated in the correct order.
 		 */
-		internal var priority : int = 0;
+		isotopeInternal var priority : int = 0;
 		
 		/**
 		 * Called just after the system is added to the engine, before any calls to the update method.

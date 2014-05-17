@@ -1,7 +1,10 @@
 package ash.core
 {
-	import ash.signals.Signal0;
 	import flash.utils.Dictionary;
+	
+	import ash.signals.Signal0;
+	
+	import it.sharpedge.isotope.core.lists.NodeList;
 
 	/**
 	 * The Engine class is the central point for creating and managing your game state. Add
@@ -162,7 +165,7 @@ package ash.core
 		 * @param nodeClass The type of node required.
 		 * @return A linked list of all nodes of this type from all entities in the engine.
 		 */
-		public function getNodeList( nodeClass : Class ) : NodeList
+		public function getNodeList( nodeClass : Class ) : ash.core.NodeList
 		{
 			if( families[nodeClass] )
 			{
@@ -248,7 +251,7 @@ package ash.core
 		public function removeSystem( system : System ) : void
 		{
 			systemList.remove( system );
-			system.removeFromEngine( this );
+			system.removeFromEngine();
 		}
 		
 		/**

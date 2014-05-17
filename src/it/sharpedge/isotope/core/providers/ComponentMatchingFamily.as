@@ -1,10 +1,17 @@
-package ash.core
+package it.sharpedge.isotope.core.providers
 {
 	import flash.utils.Dictionary;
 	import flash.utils.describeType;
 	import flash.utils.getDefinitionByName;
+	
+	import it.sharpedge.isotope.core.Engine;
+	import it.sharpedge.isotope.core.GameObject;
+	import it.sharpedge.isotope.core.Node;
+	import it.sharpedge.isotope.core.base.isotopeInternal;
 	import it.sharpedge.isotope.core.lists.NodeList;
+	import it.sharpedge.isotope.core.pool.NodePool;
 
+	use namespace isotopeInternal;
 	/**
 	 * The default class for managing a NodeList. This class creates the NodeList and adds and removes
 	 * nodes to/from the list as the entities and the components in the engine change.
@@ -19,8 +26,8 @@ package ash.core
 		private var nodeClass : Class;
 		private var components : Dictionary;
 		private var nodePool : NodePool;
-		private var engine : Engine;
-
+		private var _engine : Engine;
+		
 		/**
 		 * The constructor. Creates a ComponentMatchingFamily to provide a NodeList for the
 		 * given node class.
@@ -28,13 +35,13 @@ package ash.core
 		 * @param nodeClass The type of node to create and manage a NodeList for.
 		 * @param engine The engine that this family is managing teh NodeList for.
 		 */
-		public function ComponentMatchingFamily( nodeClass : Class, engine : Engine )
+		public function ComponentMatchingFamily( nodeClass : Class)
 		{
 			this.nodeClass = nodeClass;
-			this.engine = engine;
+			_engine = Engine.getInstance();
 			init();
 		}
-
+		
 		/**
 		 * Initialises the class. Creates the nodelist and other tools. Analyses the node to determine
 		 * what component types the node requires.
@@ -46,8 +53,8 @@ package ash.core
 			components = new Dictionary();
 			nodePool = new NodePool( nodeClass, components );
 			
-			nodePool.dispose( nodePool.get() ); // create a dummy instance to ensure describeType works.
-
+			nodePool.disposeNode( nodePool.getNode() ); // create a dummy instance to ensure describeType works.
+			
 			var variables : XMLList = describeType( nodeClass ).factory.variable;
 			for each ( var atom:XML in variables )
 			{
@@ -68,23 +75,23 @@ package ash.core
 		{
 			return nodes;
 		}
-
+		
 		/**
 		 * Called by the engine when an entity has been added to it. We check if the entity should be in
 		 * this family's NodeList and add it if appropriate.
 		 */
-		public function newEntity( entity : Entity ) : void
+		public function newGameObject( gameObject: GameObject ) : void
 		{
-			addIfMatch( entity );
+			addIfMatch( gameObject );
 		}
 		
 		/**
 		 * Called by the engine when a component has been added to an entity. We check if the entity is not in
 		 * this family's NodeList and should be, and add it if appropriate.
 		 */
-		public function componentAddedToEntity( entity : Entity, componentClass : Class ) : void
+		public function removeGameObject( gameObject: GameObject ) : void
 		{
-			addIfMatch( entity );
+			addIfMatch( gameObject );
 		}
 		
 		/**
@@ -92,11 +99,11 @@ package ash.core
 		 * is required by this family's NodeList and if so, we check if the entity is in this this NodeList and
 		 * remove it if so.
 		 */
-		public function componentRemovedFromEntity( entity : Entity, componentClass : Class ) : void
+		public function componentAddedToGameObject( gameObject: GameObject, componentClass : Class ) : void
 		{
 			if( components[componentClass] )
 			{
-				removeIfMatch( entity );
+				removeIfMatch( gameObject );
 			}
 		}
 		
@@ -104,34 +111,34 @@ package ash.core
 		 * Called by the engine when an entity has been rmoved from it. We check if the entity is in
 		 * this family's NodeList and remove it if so.
 		 */
-		public function removeEntity( entity : Entity ) : void
+		public function componentRemovedFromGameObject( gameObject: GameObject, componentClass : Class ) : void
 		{
-			removeIfMatch( entity );
+			removeIfMatch( gameObject );
 		}
 		
 		/**
 		 * If the entity is not in this family's NodeList, tests the components of the entity to see
 		 * if it should be in this NodeList and adds it if so.
 		 */
-		private function addIfMatch( entity : Entity ) : void
+		private function addIfMatch( gameObject : GameObject ) : void
 		{
-			if( !entities[entity] )
+			if( !entities[gameObject] )
 			{
 				var componentClass : *;
 				for ( componentClass in components )
 				{
-					if ( !entity.has( componentClass ) )
+					if ( !gameObject.GetComponent( componentClass ) )
 					{
 						return;
 					}
 				}
-				var node : Node = nodePool.get();
-				node.entity = entity;
+				var node : Node = nodePool.getNode();
+				node.gameObject = gameObject;
 				for ( componentClass in components )
 				{
-					node[components[componentClass]] = entity.get( componentClass );
+					node[components[componentClass]] = gameObject.GetComponent( componentClass );
 				}
-				entities[entity] = node;
+				entities[gameObject] = node;
 				nodes.add( node );
 			}
 		}
@@ -139,21 +146,21 @@ package ash.core
 		/**
 		 * Removes the entity if it is in this family's NodeList.
 		 */
-		private function removeIfMatch( entity : Entity ) : void
+		private function removeIfMatch( gameObject : GameObject ) : void
 		{
-			if( entities[entity] )
+			if( entities[gameObject] )
 			{
-				var node : Node = entities[entity];
-				delete entities[entity];
+				var node : Node = entities[gameObject];
+				delete entities[gameObject];
 				nodes.remove( node );
-				if( engine.updating )
+				if( _engine.updating )
 				{
 					nodePool.cache( node );
-					engine.updateComplete.add( releaseNodePoolCache );
+					_engine.updateComplete.add( releaseNodePoolCache );
 				}
 				else
 				{
-					nodePool.dispose( node );
+					nodePool.disposeNode( node );
 				}
 			}
 		}
@@ -164,20 +171,23 @@ package ash.core
 		 */
 		private function releaseNodePoolCache() : void
 		{
-			engine.updateComplete.remove( releaseNodePoolCache );
+			_engine.updateComplete.remove( releaseNodePoolCache );
 			nodePool.releaseCache();
 		}
 		
 		/**
 		 * Removes all nodes from the NodeList.
 		 */
-		public function cleanUp() : void
+		public function dispose() : void
 		{
 			for( var node : Node = nodes.head; node; node = node.next )
 			{
-				delete entities[node.entity];
+				delete entities[node.gameObject];
 			}
+			
 			nodes.removeAll();
+			nodePool.dispose();
+			_engine = null;
 		}
 	}
 }

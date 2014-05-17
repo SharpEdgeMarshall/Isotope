@@ -1,7 +1,7 @@
 package it.sharpedge.isotope.core.components
 {
-	import it.sharpedge.isotope.core.components.base.Component;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
+	import it.sharpedge.isotope.core.Component;
 	
 	use namespace isotopeInternal;
 	
@@ -9,7 +9,7 @@ package it.sharpedge.isotope.core.components
 	{		
 		private var _parent : Transform;
 		
-		private var _children : Vector.<Transform>;
+		isotopeInternal var _children : Vector.<Transform>;
 		
 		public function get children() : Vector.<Transform>
 		{

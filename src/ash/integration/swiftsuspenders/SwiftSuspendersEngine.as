@@ -1,7 +1,7 @@
 package ash.integration.swiftsuspenders
 {
 	import ash.core.Engine;
-	import ash.core.NodeList;
+	import it.sharpedge.isotope.core.lists.NodeList;
 	import ash.core.System;
 	import org.swiftsuspenders.Injector;
 
