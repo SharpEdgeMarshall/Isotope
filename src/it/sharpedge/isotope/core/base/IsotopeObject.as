@@ -1,8 +1,9 @@
 package it.sharpedge.isotope.core.base
 {
-	import it.sharpedge.isotope.core.components.Transform;
 	import it.sharpedge.isotope.core.Component;
 	import it.sharpedge.isotope.core.GameObject;
+	import it.sharpedge.isotope.core.components.ScriptsContainer;
+	import it.sharpedge.isotope.core.components.Transform;
 
 	use namespace isotopeInternal;
 	
@@ -41,9 +42,9 @@ package it.sharpedge.isotope.core.base
 			}
 			else if(obj is Component)
 			{
-				if(obj is Transform)
+				if(obj is Transform || obj is ScriptsContainer)
 				{
-					throw new Error("Cannot Destroy transform component");
+					throw new Error("Cannot Destroy: " + Object(obj).constructor + " component");
 					return;
 				}
 				

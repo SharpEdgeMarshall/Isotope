@@ -91,7 +91,7 @@ package it.sharpedge.isotope.core.providers
 		 */
 		public function removeGameObject( gameObject: GameObject ) : void
 		{
-			addIfMatch( gameObject );
+			removeIfMatch( gameObject );
 		}
 		
 		/**
@@ -103,7 +103,7 @@ package it.sharpedge.isotope.core.providers
 		{
 			if( components[componentClass] )
 			{
-				removeIfMatch( gameObject );
+				addIfMatch( gameObject );
 			}
 		}
 		
@@ -113,7 +113,10 @@ package it.sharpedge.isotope.core.providers
 		 */
 		public function componentRemovedFromGameObject( gameObject: GameObject, componentClass : Class ) : void
 		{
-			removeIfMatch( gameObject );
+			if( components[componentClass] )
+			{
+				removeIfMatch( gameObject );
+			}
 		}
 		
 		/**
@@ -122,12 +125,13 @@ package it.sharpedge.isotope.core.providers
 		 */
 		private function addIfMatch( gameObject : GameObject ) : void
 		{
+			
 			if( !entities[gameObject] )
 			{
 				var componentClass : *;
 				for ( componentClass in components )
 				{
-					if ( !gameObject.GetComponent( componentClass ) )
+					if ( !gameObject.GetComponents( componentClass ) )
 					{
 						return;
 					}

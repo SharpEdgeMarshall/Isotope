@@ -4,7 +4,10 @@ package it.sharpedge.isotope.core
 	import flash.utils.Dictionary;
 	
 	import it.sharpedge.isotope.core.base.IsotopeObject;
+	import it.sharpedge.isotope.core.base.isSubclassOf;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
+	import it.sharpedge.isotope.core.components.ScriptBehaviour;
+	import it.sharpedge.isotope.core.components.ScriptsContainer;
 	import it.sharpedge.isotope.core.components.Transform;
 	import it.sharpedge.isotope.core.pool.ComponentPool;
 	
@@ -27,6 +30,9 @@ package it.sharpedge.isotope.core
 		private var _destroying : Signal;
 		private var _destroyed : Signal;
 		
+		//Component Cache
+		private var _transform : Transform;
+		private var _scriptsCont : ScriptsContainer;
 
 
 		public function get componentRemoving():Signal
@@ -57,7 +63,7 @@ package it.sharpedge.isotope.core
 		//Components accessor
 		public function get transform() : Transform
 		{
-			return _components[Transform];
+			return _transform;
 		}
 		
 		
@@ -72,26 +78,36 @@ package it.sharpedge.isotope.core
 			
 			Engine.getInstance().addGameObject(this);
 			
-			AddComponent(Transform);
+			_transform = AddComponent(Transform) as Transform;
+			_scriptsCont = AddComponent(ScriptsContainer) as ScriptsContainer;
 			
 		}
 		
 		private function createSignals() : void
 		{
-			_componentAdded = new Signal();
-			_componentRemoving = new Signal();
-			_componentRemoved = new Signal();
-			_destroying = new Signal();
-			_destroyed = new Signal();
+			_componentAdded = new Signal(GameObject, Component);
+			_componentRemoving = new Signal(GameObject, Component);
+			_componentRemoved = new Signal(GameObject, Component);
+			_destroying = new Signal(GameObject);
+			_destroyed = new Signal(GameObject);
 		}
 		
 		private function disposeSignals() : void
 		{
 			_componentAdded.removeAll();
+			_componentAdded = null;
+			
 			_componentRemoving.removeAll();
+			_componentRemoving = null;
+			
 			_componentRemoved.removeAll();
+			_componentRemoved = null;
+			
 			_destroying.removeAll();
+			_destroying = null;
+			
 			_destroyed.removeAll();
+			_destroyed = null;
 		}
 		
 		public function get activeInHierarchy() : Boolean
@@ -127,37 +143,54 @@ package it.sharpedge.isotope.core
 		
 		private function setChildrensActiveHierarchy(state:Boolean) : void
 		{			
-			for each(var childTransf : Transform in transform._children)
+			for each(var childTransf : Transform in _transform._children)
 			{
 				childTransf._gameObject.SetActiveInHierarchy(state);
 			}
 		}		
 		
-		public function AddComponent(componentType:Class): void
+		public function AddComponent(componentType:Class): Component
 		{
+			//Check if we are adding a Component
+			if(!isSubclassOf(componentType, Component))
+			{
+				throw new IllegalOperationError("The Class: " + componentType + " doesn't inherit from Component");
+				return null;
+			}
 			
+			//Check if we already have that Component
 			if(_components[componentType])
 			{
-				disposeComponent(Component(_components[componentType]));				
+				throw new IllegalOperationError("The Component: " + componentType + " is already added to the GameObject!");
+				return null;
 			}
 			
 			//Get component from Pool
 			var component : Component = ComponentPool.getComponent(componentType);
 			
-			if(!component)
+			component.setGameObject(this);
+			
+			//Check if want to add a Script
+			if(component is ScriptBehaviour)
 			{
-				throw new IllegalOperationError("The Class doesn't inherit from Component");
-				return;
+				_scriptsCont.addScript(component as ScriptBehaviour);
+				
 			}
+			else
+			{				
+				_components[componentType] = component;	
+				
+				_componentAdded.dispatch(this, component);
+			}			
 			
-			component.setGameObject(this);			
 			
-			_components[componentType] = component;			
-			_componentAdded.dispatch();
+			
+			return component;
 		}
 		
 		isotopeInternal function RemoveComponent(componentType:Class) : void
 		{
+			
 			var component : Component = _components[ componentType ] as Component;
 			
 			if(component)
@@ -166,29 +199,51 @@ package it.sharpedge.isotope.core
 			}			
 		}
 		
+		isotopeInternal function RemoveScript(script:ScriptBehaviour) : void
+		{
+			_scriptsCont.removeScript(script);
+		}
+		
 		public function GetComponent(componentType:Class) : Component
 		{
-			for each(var comp : Component in _components)
+			//Search script or component
+			if(isSubclassOf(componentType, ScriptBehaviour))
 			{
-				if(comp is componentType)
-					return comp;
+				return _scriptsCont.getScript(componentType);
 			}
+			else
+			{
 			
-			return null;
+				for each(var comp : Component in _components)
+				{
+					if(comp is componentType)
+						return comp;
+				}
+				
+				return null;
+			}
 		}
 		
 		public function GetComponents(componentType:Class) : Vector.<Component>
 		{
-			
-			var comps : Vector.<Component> = new Vector.<Component>();
-			
-			for each(var comp : Component in _components)
+			//Search script or component
+			if(isSubclassOf(componentType, ScriptBehaviour))
 			{
-				if(comp is componentType)
-					comps.push(comp);
+				return Vector.<Component>(_scriptsCont.getScripts(componentType));
 			}
+			else
+			{
 			
-			return comps;
+				var comps : Vector.<Component> = new Vector.<Component>();			
+				
+				for each(var comp : Component in _components)
+				{
+					if(comp is componentType)
+						comps.push(comp);
+				}
+				
+				return comps;
+			}
 		}
 		
 		public function GetComponentInChildren(componentType:Class) : Component
@@ -199,7 +254,7 @@ package it.sharpedge.isotope.core
 				return comp;
 			else
 			{
-				for each(var childTransf : Transform in transform._children)
+				for each(var childTransf : Transform in _transform._children)
 				{
 					comp = childTransf._gameObject.GetComponentInChildren(componentType);
 					
@@ -219,7 +274,7 @@ package it.sharpedge.isotope.core
 			if(comp)
 				comps.push(comp);
 
-			for each(var childTransf : Transform in transform._children)
+			for each(var childTransf : Transform in _transform._children)
 			{					
 				comps = comps.concat(childTransf.gameObject.GetComponentsInChildren(componentType));					
 			}
@@ -249,7 +304,7 @@ package it.sharpedge.isotope.core
 		private function executeMessage(methodName : String, value : *) : Boolean
 		{
 			var found : Boolean = false;
-			
+			//TODO to correct!!!!
 			for each(var component : Component in _components)
 			{
 				if(methodName in component)
@@ -268,7 +323,7 @@ package it.sharpedge.isotope.core
 			
 			if(this.transform.parent)
 			{
-				found = found || this.transform.parent.gameObject.executeMessageUpdwards(methodName, value);
+				found = found || _transform.parent.gameObject.executeMessageUpdwards(methodName, value);
 			}
 			
 			return found;
@@ -290,8 +345,16 @@ package it.sharpedge.isotope.core
 				cGObj._components[Object(component).constructor] = cComp;
 			}
 			
+			//clone scripts
+			for each(var script : ScriptBehaviour in _scriptsCont.scripts)
+			{
+				cComp = script.clone();
+				cComp.setGameObject(cGObj);
+				ScriptsContainer(cGObj._components[ScriptsContainer]).addScript(cComp as ScriptBehaviour);
+			}
+			
 			//Clone child
-			for each(var child : Transform in transform._children)
+			for each(var child : Transform in _transform._children)
 			{
 				cChildGObj = child.gameObject.clone();
 				cChildGObj.transform.parent = cGObj.transform;
@@ -317,24 +380,33 @@ package it.sharpedge.isotope.core
 		isotopeInternal function dispose() : void
 		{
 			//Say all that we are destroying this game object
-			_destroying.dispatch();
+			_destroying.dispatch(this);
 			
 			//Recursive destroy children from the deepest
-			for each(var child : Transform in transform._children)
+			for each(var child : Transform in _transform._children)
 			{
 				child._gameObject.dispose();
 			}			
 			
+			//Remove scripts			
+			for each(var script : ScriptBehaviour in _scriptsCont.scripts)
+			{
+				disposeComponent(script);
+			}
+			
 			//Remove all components
 			for each(var component : Component in _components)
 			{
-				disposeComponent(component);
+				disposeComponent(component);				
 			}
 			
 			_components = null;
 			
+			_transform = null;
+			_scriptsCont = null;
+			
 			//Say all that we finished destroying this game object
-			_destroyed.dispatch();
+			_destroyed.dispatch(this);
 			
 			Engine.getInstance().removeGameObject(this);						
 			
@@ -347,19 +419,31 @@ package it.sharpedge.isotope.core
 		 * Removes the component from the GameObject and dispose it
 		 */
 		isotopeInternal function disposeComponent(component:Component) : void
-		{
-			//Say all that the component is going to be removed
-			_componentRemoving.dispatch();
+		{	
+			
 			
 			//Remove the component from this gameobject
-			RemoveComponent(Object(component).constructor);			
+			if(component is ScriptBehaviour)
+			{
+				RemoveScript(component as ScriptBehaviour); //If script just remove and dispose
+			}
+			else
+			{
+				//Say all that the component is going to be removed
+				_componentRemoving.dispatch(this, component); //If not Script dispatch event
+				
+				RemoveComponent(Object(component).constructor);
+			}
 			//Dispose the component
 			component.dispose();
 			//Send component to Pool to reuse
 			ComponentPool.disposeComponent(component);	
 			
-			//Say all that the component has been removed
-			_componentRemoved.dispatch();
+			if(!(component is ScriptBehaviour))
+			{
+				//Say all that the component has been removed
+				_componentRemoved.dispatch(this, component); //If not Script dispatch event
+			}
 		}
 	}
 }

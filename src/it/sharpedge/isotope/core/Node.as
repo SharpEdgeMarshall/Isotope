@@ -14,6 +14,7 @@ package it.sharpedge.isotope.core
 	public class Node
 	{	
 		
+		
 		public var gameObject : GameObject;
 		
 		/**

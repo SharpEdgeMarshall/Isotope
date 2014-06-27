@@ -22,21 +22,22 @@ package it.sharpedge.isotope.core.providers
 	 */
 	public class NodeListProvider implements DependencyProvider
 	{
-		private var engine : Engine;
 
+		private static const DEFAULT_MATCHER : Class = ComponentMatchingFamily;
+		
 		public function NodeListProvider()
 		{
-			this.engine = Engine.getInstance();
 		}
 
 		public function apply( targetType : Class, activeInjector : Injector, injectParameters : Dictionary ) : Object
 		{
-			if ( injectParameters["nodeType"] )
+			if ( injectParameters["nodeType"])
 			{
 				var nodeClass : Class = getDefinitionByName( injectParameters["nodeType"] ) as Class;
+				
 				if ( nodeClass )
 				{
-					return engine.getNodeList( nodeClass );
+					return Engine.getInstance().getNodeList( nodeClass );
 				}
 			}
 			return null;
