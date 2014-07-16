@@ -301,16 +301,15 @@ package it.sharpedge.isotope.core
 			}
 		}
 		
-		private function executeMessage(methodName : String, value : *) : Boolean
+		isotopeInternal function executeMessage(methodName : String, value : *) : Boolean
 		{
 			var found : Boolean = false;
-			//TODO to correct!!!!
-			for each(var component : Component in _components)
+			for each(var script : ScriptBehaviour in _scriptsCont.scripts)
 			{
-				if(methodName in component)
+				if(methodName in script)
 				{
 					found = true;
-					component[methodName](value);
+					script[methodName](value);
 				}
 			}
 			

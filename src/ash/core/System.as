@@ -34,7 +34,7 @@ package ash.core
 		 * 
 		 * @param engine The engine the system was added to.
 		 */
-		public function addToEngine() : void
+		public function addToEngine(engine : Engine ) : void
 		{
 			
 		}
@@ -45,7 +45,7 @@ package ash.core
 		 * 
 		 * @param engine The engine the system was removed from.
 		 */
-		public function removeFromEngine() : void
+		public function removeFromEngine(engine : Engine ) : void
 		{
 			
 		}

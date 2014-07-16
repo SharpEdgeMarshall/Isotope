@@ -49,6 +49,11 @@ package it.sharpedge.isotope.core
 			_injector.map(NodeList).toProvider(new NodeListProvider());
 		}
 
+		public function get injector():Injector
+		{
+			return _injector;
+		}
+
 		public function get updating():Boolean
 		{
 			return _updating;

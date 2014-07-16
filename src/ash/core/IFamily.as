@@ -1,6 +1,6 @@
 package ash.core
 {
-	import it.sharpedge.isotope.core.lists.NodeList;
+
 
 	/**
 	 * The interface for classes that are used to manage NodeLists (set as the familyClass property 

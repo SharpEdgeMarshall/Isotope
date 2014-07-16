@@ -3,7 +3,6 @@ package ash.core
 	import flash.utils.Dictionary;
 	import flash.utils.describeType;
 	import flash.utils.getDefinitionByName;
-	import it.sharpedge.isotope.core.lists.NodeList;
 
 	/**
 	 * The default class for managing a NodeList. This class creates the NodeList and adds and removes

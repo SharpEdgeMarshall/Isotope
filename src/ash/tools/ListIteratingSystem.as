@@ -2,7 +2,7 @@ package ash.tools
 {
 	import ash.core.Engine;
 	import ash.core.Node;
-	import it.sharpedge.isotope.core.lists.NodeList;
+	import ash.core.NodeList;
 	import ash.core.System;
 
 	/**

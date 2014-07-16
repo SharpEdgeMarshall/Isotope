@@ -58,7 +58,7 @@ package it.sharpedge.isotope.core.providers
 			var variables : XMLList = describeType( nodeClass ).factory.variable;
 			for each ( var atom:XML in variables )
 			{
-				if ( atom.@name != "entity" && atom.@name != "previous" && atom.@name != "next" )
+				if ( atom.@name != "entity" && atom.@name != "previous" && atom.@name != "next" && atom.@name != "gameObject")
 				{
 					var componentClass : Class = getDefinitionByName( atom.@type ) as Class;
 					components[componentClass] = atom.@name.toString();
@@ -131,7 +131,7 @@ package it.sharpedge.isotope.core.providers
 				var componentClass : *;
 				for ( componentClass in components )
 				{
-					if ( !gameObject.GetComponents( componentClass ) )
+					if ( !gameObject.GetComponent( componentClass ) )
 					{
 						return;
 					}
