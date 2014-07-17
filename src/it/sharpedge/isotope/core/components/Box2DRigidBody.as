@@ -10,7 +10,7 @@ package it.sharpedge.isotope.core.components
 	
 	use namespace isotopeInternal;
 	
-	public class Box2DCollider extends Component
+	public class Box2DRigidBody extends Component
 	{		
 		private var collType : ColliderType = ColliderType.DYNAMIC;
 		
@@ -50,7 +50,7 @@ package it.sharpedge.isotope.core.components
 		}
 		
 		
-		public function Box2DCollider()
+		public function Box2DRigidBody()
 		{
 			super(getComponentAccess(), "Box2DRigidBody");
 		}
@@ -59,6 +59,7 @@ package it.sharpedge.isotope.core.components
 		public function AddShape(shape:b2Shape, density:Number=0, friction:Number=0.2, bounciness:Number=0):void
 		{
 			var fixDef : b2FixtureDef = new b2FixtureDef();
+			fixDef.shape = shape;
 			fixDef.density = density;
 			fixDef.friction = friction;
 			fixDef.restitution = bounciness;

@@ -6,10 +6,15 @@ package it.sharpedge.isotope.core.systems
 	import Box2D.Dynamics.b2BodyDef;
 	import Box2D.Dynamics.b2World;
 	
+	import it.sharpedge.isotope.core.Component;
 	import it.sharpedge.isotope.core.System;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
+	import it.sharpedge.isotope.core.components.Box2DRigidBody;
+	import it.sharpedge.isotope.core.components.Transform;
+	import it.sharpedge.isotope.core.components.colliders.Collider2D;
 	import it.sharpedge.isotope.core.lists.NodeList;
 	import it.sharpedge.isotope.core.nodes.Box2DNode;
+	import it.sharpedge.isotope.core.nodes.Collider2DNode;
 	
 	use namespace isotopeInternal;
 	
@@ -21,12 +26,16 @@ package it.sharpedge.isotope.core.systems
 		
 		private var world:b2World;
 		
+		[Inject(nodeType="it.sharpedge.isotope.core.nodes.Collider2DNode"]
+		public var colNodes : NodeList;
+		
 		[Inject(nodeType="it.sharpedge.isotope.core.nodes.Box2DNode"]
-		public var nodes : NodeList;
+		public var rbNodes : NodeList;
 		
 		private var accumulator : Number = 0;
 		
-		private var tNode : Box2DNode;
+		private var tcolNode : Collider2DNode;
+		private var trbNode : Box2DNode;
 		private var tPos : b2Vec2;
 		private var tVecPos : Vector3D;
 		private var tVecRot : Vector3D;
@@ -36,28 +45,103 @@ package it.sharpedge.isotope.core.systems
 		{			
 			world = new b2World(new b2Vec2(0,-9.8), true);
 			
-			for( var node : Box2DNode = nodes.head; node; node = node.next )
+			for( tcolNode = colNodes.head; tcolNode; tcolNode = tcolNode.next )
 			{
-				onRigidBodyAdded( node );
+				onColliderAdded( tcolNode );
+			}			
+			colNodes.nodeAdded.add( onColliderAdded );
+			colNodes.nodeRemoved.add( onColliderRemoved );
+			
+			for( trbNode = rbNodes.head; trbNode; trbNode = trbNode.next )
+			{
+				onRigidBodyAdded( trbNode );
 			}
-			nodes.nodeAdded.add( onRigidBodyAdded );
-			nodes.nodeRemoved.add( onRigidBodyRemoved );
+			rbNodes.nodeAdded.add( onRigidBodyAdded );
+			rbNodes.nodeRemoved.add( onRigidBodyRemoved );
 		}
 		
 		private function onRigidBodyAdded(node : Box2DNode) : void
 		{	
+			//TODO handle kinetic w/ transform change
+			
+			//Create Box2D Body
 			var bDef : b2BodyDef = new b2BodyDef();
 			tVecPos  = node.transform.position;
 			bDef.position = new b2Vec2(tVecPos.x, tVecPos.y);
 			
-			node.collider.body = world.CreateBody(bDef);
+			node.rigidBody.body = world.CreateBody(bDef);
+			
+			//Find all Colliders children of the gameobject containing the RigidBody
+			var colVec : Vector.<Component> = node.gameObject.GetComponentsInChildren(Collider2D);
+			
+			for each(var colComp : Collider2D in colVec)
+			{
+				addCollider2RigidBody(node.rigidBody, colComp);
+			}
 		}
 		
 		
 		private function onRigidBodyRemoved(node : Box2DNode) : void
 		{
-			world.DestroyBody(node.collider.body);
-		}	
+			//Find all Colliders children of the gameobject containing the RigidBody
+			var colVec : Vector.<Component> = node.gameObject.GetComponentsInChildren(Collider2D);
+			
+			for each(var colComp : Collider2D in colVec)
+			{
+				removeCollider2RigidBody(node.rigidBody, colComp);
+			}
+			
+			//Destroy Box2D Body
+			world.DestroyBody(node.rigidBody.body);
+		}
+		
+		private function onColliderAdded(node : Collider2DNode) : void
+		{	
+			node.collider.changed.add(onColliderChanged);
+			
+			var trsf : Transform = node.gameObject.transform;
+			var trbComp : Box2DRigidBody;			
+			
+			//Find all RigiBodies parent of the gameobject containing the Collider
+			while(trsf != null)
+			{
+				trbComp = trsf.GetComponent(Box2DRigidBody) as Box2DRigidBody;
+				if(trbComp)
+					addCollider2RigidBody(trbComp, node.collider);
+			}			
+		}
+		
+		private function onColliderChanged(colComp : Collider2D):void
+		{
+			// TODO find a way to remove and re add fixture to handle change in collider
+			
+		}		
+		
+		private function onColliderRemoved(node : Collider2DNode) : void
+		{
+			var trsf : Transform = node.gameObject.transform;
+			var trbComp : Box2DRigidBody;			
+			
+			//Find all RigiBodies parent of the gameobject containing the Collider
+			while(trsf != null)
+			{
+				trbComp = trsf.GetComponent(Box2DRigidBody) as Box2DRigidBody;
+				if(trbComp)
+					removeCollider2RigidBody(trbComp, node.collider);
+			}	
+		}
+		
+		private function addCollider2RigidBody(rigidBody : Box2DRigidBody, collider : Collider2D) : void
+		{
+			//rigidBody.body.c
+			//TODO add fixture
+		}
+		
+		private function removeCollider2RigidBody(rigidBody : Box2DRigidBody, collider : Collider2D) : void
+		{
+			//TODO remove fixture
+		}
+		
 		
 		override public function Update(time : Number) : void
 		{
@@ -71,22 +155,22 @@ package it.sharpedge.isotope.core.systems
 			
 			world.ClearForces();
 			
-			for ( tNode = nodes.head; tNode; tNode = tNode.next )
+			for ( trbNode = rbNodes.head; trbNode; trbNode = trbNode.next )
 			{	
 				//Set Position
-				tPos = tNode.collider.body.GetPosition();
+				tPos = trbNode.rigidBody.body.GetPosition();
 				
-				tVecPos = tNode.transform.position;
+				tVecPos = trbNode.transform.position;
 				tVecPos.x = tPos.x;
 				tVecPos.y = tPos.y;
 				
-				tNode.transform.position = tVecPos;
+				trbNode.transform.position = tVecPos;
 				
 				//Set Rotation
-				tVecRot = tNode.transform.rotation;				
-				tVecRot.z = tNode.collider.body.GetAngle();
+				tVecRot = trbNode.transform.rotation;				
+				tVecRot.z = trbNode.rigidBody.body.GetAngle();
 				
-				tNode.transform.rotation = tVecRot;
+				trbNode.transform.rotation = tVecRot;
 			}
 			
 		}

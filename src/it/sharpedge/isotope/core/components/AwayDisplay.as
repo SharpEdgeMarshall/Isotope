@@ -56,6 +56,14 @@ package it.sharpedge.isotope.core.components
 			
 			_objContainer = null;
 		}
+		
+		override isotopeInternal function clone():Component
+		{
+			var dispComp : AwayDisplay = new AwayDisplay();
+			dispComp.objContainer = this._objContainer.clone() as ObjectContainer3D;
+			
+			return dispComp;
+		}
 
 	}
 }
