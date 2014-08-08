@@ -212,7 +212,8 @@ package it.sharpedge.isotope.core.components
 		
 		public function set position(value:Vector3D):void
 		{
-			//TODO set world position
+			if(!_parent)
+				this.localPosition = value;
 		}
 		
 		//ROTATION
@@ -298,8 +299,8 @@ package it.sharpedge.isotope.core.components
 		
 		public function set rotation(value:Vector3D):void
 		{
-			//TODO set world rotation
-			
+			if(!parent)
+				this.localRotation = value;
 			
 		}
 		

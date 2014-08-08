@@ -101,7 +101,7 @@ package it.sharpedge.isotope.core.providers
 		 */
 		public function componentAddedToGameObject( gameObject: GameObject, componentClass : Class ) : void
 		{
-			if( components[componentClass] )
+			//if( components[componentClass] )
 			{
 				addIfMatch( gameObject );
 			}

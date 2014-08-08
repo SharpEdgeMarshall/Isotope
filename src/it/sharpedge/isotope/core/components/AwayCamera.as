@@ -1,9 +1,12 @@
 package it.sharpedge.isotope.core.components
 {
 	import away3d.cameras.Camera3D;
+	import away3d.cameras.lenses.OrthographicLens;
+	import away3d.cameras.lenses.PerspectiveLens;
 	
 	import it.sharpedge.isotope.core.Behaviour;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
+	import it.sharpedge.isotope.core.utils.CameraType;
 	
 	use namespace isotopeInternal;
 	
@@ -22,6 +25,23 @@ package it.sharpedge.isotope.core.components
 		}
 		
 		isotopeInternal var camera : Camera3D;
+		
+		
+		public function get type() : CameraType
+		{
+			if(camera.lens is PerspectiveLens)
+				return CameraType.PERSPECTIVE;
+			else
+				return CameraType.ORTHOGRAPHIC;
+		}
+		
+		public function set type(value:CameraType):void
+		{
+			if(value == CameraType.PERSPECTIVE)
+				camera.lens = new PerspectiveLens();
+			else if(value == CameraType.ORTHOGRAPHIC)
+				camera.lens = new OrthographicLens();				
+		}
 		
 		public function AwayCamera()
 		{

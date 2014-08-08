@@ -1,8 +1,6 @@
 package it.sharpedge.isotope.core.components
 {
-	import Box2D.Collision.Shapes.b2Shape;
 	import Box2D.Dynamics.b2Body;
-	import Box2D.Dynamics.b2FixtureDef;
 	
 	import it.sharpedge.isotope.core.Component;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
@@ -53,19 +51,6 @@ package it.sharpedge.isotope.core.components
 		public function Box2DRigidBody()
 		{
 			super(getComponentAccess(), "Box2DRigidBody");
-		}
-		
-		
-		public function AddShape(shape:b2Shape, density:Number=0, friction:Number=0.2, bounciness:Number=0):void
-		{
-			var fixDef : b2FixtureDef = new b2FixtureDef();
-			fixDef.shape = shape;
-			fixDef.density = density;
-			fixDef.friction = friction;
-			fixDef.restitution = bounciness;
-			
-			body.CreateFixture(fixDef);
-			
 		}
 	}
 }

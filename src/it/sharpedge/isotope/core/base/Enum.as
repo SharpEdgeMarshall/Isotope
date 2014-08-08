@@ -52,9 +52,9 @@ package it.sharpedge.isotope.core.base
 			}
 			
 			// if opening up a new type, alloc an array for its constants
-			var constants :Array = _pendingDb[typeName];
+			var constants : Vector.<Enum> = _pendingDb[typeName];
 			if (constants == null)
-				_pendingDb[typeName] = constants = [];
+				_pendingDb[typeName] = constants = new Vector.<Enum>();
 			
 			// record
 			_index = constants.length;

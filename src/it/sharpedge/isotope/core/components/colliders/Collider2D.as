@@ -19,7 +19,7 @@ package it.sharpedge.isotope.core.components.colliders
 		
 		private var _bounciness : Number = 0.0;
 		private var _friction : Number = 0.2;
-		private var _density : Number = 0.0;
+		private var _density : Number = 10.0;
 		
 		public function get density():Number
 		{
