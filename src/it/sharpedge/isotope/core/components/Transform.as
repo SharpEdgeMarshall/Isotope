@@ -1,6 +1,7 @@
 package it.sharpedge.isotope.core.components
 {
 	import flash.geom.Matrix3D;
+	import flash.geom.Orientation3D;
 	import flash.geom.Vector3D;
 	
 	import away3d.core.math.MathConsts;
@@ -8,7 +9,7 @@ package it.sharpedge.isotope.core.components
 	import it.sharpedge.isotope.core.Component;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
 	import it.sharpedge.isotope.core.math.Matrix3DUtils;
-	import it.sharpedge.isotope.core.utils.Space;
+	import it.sharpedge.isotope.core.utils.enums.Space;
 	
 	use namespace isotopeInternal;
 	
@@ -108,18 +109,14 @@ package it.sharpedge.isotope.core.components
 		//World
 		private var _worldPos:Vector3D = new Vector3D();
 		private var _worldRot:Vector3D = new Vector3D();
-		private var _worldSca:Vector3D = new Vector3D();
-	
-		private var _worldPositionDirty : Boolean = false;
-		private var _worldRotationDirty : Boolean = false;
-		private var _worldScaleDirty : Boolean = false;		
+		private var _worldSca:Vector3D = new Vector3D();	
 		
 		//Hierarchy Transform Properties
-		private var _sceneTransform:Matrix3D = new Matrix3D();
-		private var _sceneTransformDirty:Boolean = true;
+		private var _localToWorldTransform:Matrix3D = new Matrix3D();
+		private var _localToWorldTransformDirty:Boolean = true;
 		
-		private var _inverseSceneTransform:Matrix3D = new Matrix3D();
-		private var _inverseSceneTransformDirty:Boolean = true;		
+		private var _worldToLocalTransform:Matrix3D = new Matrix3D();
+		private var _worldToLocalTransformDirty:Boolean = true;		
 		
 		
 		//POSITION
@@ -202,9 +199,8 @@ package it.sharpedge.isotope.core.components
 		 */
 		public function get position():Vector3D
 		{
-			if (_worldPositionDirty) {
+			if (_localToWorldTransformDirty) {
 				localToWorldMatrix.copyColumnTo(3, _worldPos);
-				_worldPositionDirty = false;
 			}
 			
 			return _worldPos;
@@ -214,6 +210,9 @@ package it.sharpedge.isotope.core.components
 		{
 			if(!_parent)
 				this.localPosition = value;
+			else
+				this.localPosition = _parent.worldToLocalMatrix.transformVector(value);
+			
 		}
 		
 		//ROTATION
@@ -288,10 +287,9 @@ package it.sharpedge.isotope.core.components
 		
 		public function get rotation():Vector3D
 		{
-			if(_worldRotationDirty)
+			if(_localToWorldTransformDirty)
 			{
-				_worldRot.copyFrom(localToWorldMatrix.decompose()[1]);
-				_worldRotationDirty = false;
+				_worldRot = localToWorldMatrix.decompose()[1];
 			}
 			
 			return _worldRot;
@@ -301,10 +299,25 @@ package it.sharpedge.isotope.core.components
 		{
 			if(!parent)
 				this.localRotation = value;
-			
+			else
+				this.localRotation = worldToLocalMatrix.deltaTransformVector(value);
 		}
 		
 		//SCALE		
+		
+		public function get localScale():Vector3D
+		{
+			return new Vector3D(_scaleX, _scaleY, _scaleZ);
+		}
+		
+		public function set localScale(val:Vector3D):void
+		{
+			_scaleX = val.x;
+			_scaleY = val.y;
+			_scaleZ = val.z;
+			
+			invalidateScale();
+		}
 		
 		/**
 		 * Defines the scale of the 3d object along the x-axis, relative to local coordinates.
@@ -342,24 +355,6 @@ package it.sharpedge.isotope.core.components
 			invalidateScale();
 		}
 		
-		public function get scale():Vector3D
-		{
-			if(_worldScaleDirty)
-			{
-				_worldSca.copyFrom(localToWorldMatrix.decompose()[2]);
-				_worldScaleDirty = false;
-			}
-			
-			return _worldSca;
-		}
-		
-		public function set scale(value:Vector3D):void
-		{
-			
-			//TODO set world scale
-			
-		}
-		
 		/**
 		 * Defines the scale of the 3d object along the z-axis, relative to local coordinates.
 		 */
@@ -376,6 +371,25 @@ package it.sharpedge.isotope.core.components
 			_scaleZ = val;
 			
 			invalidateScale();
+		}
+		
+		public function get scale():Vector3D
+		{
+			if(_localToWorldTransformDirty)
+			{
+				_worldSca.copyFrom(localToWorldMatrix.decompose()[2]);
+			}
+			
+			return _worldSca;
+		}
+		
+		public function set scale(value:Vector3D):void
+		{
+			if(!parent)
+				this.localScale = value;
+			else
+				this.localScale = worldToLocalMatrix.deltaTransformVector(value);
+			
 		}
 		
 		
@@ -436,21 +450,21 @@ package it.sharpedge.isotope.core.components
 		
 		public function get localToWorldMatrix() : Matrix3D
 		{
-			if (_sceneTransformDirty)
+			if (_localToWorldTransformDirty)
 				updateSceneTransform();
 			
-			return _sceneTransform;
+			return _localToWorldTransform;
 		}
 		
 		public function get worldToLocalMatrix() : Matrix3D
 		{
-			if (_inverseSceneTransformDirty) {
-				_inverseSceneTransform.copyFrom(localToWorldMatrix);
-				_inverseSceneTransform.invert();
-				_inverseSceneTransformDirty = false;
+			if (_worldToLocalTransformDirty) {
+				_worldToLocalTransform.copyFrom(localToWorldMatrix);
+				_worldToLocalTransform.invert();
+				_worldToLocalTransformDirty = false;
 			}
 			
-			return _inverseSceneTransform;
+			return _worldToLocalTransform;
 		}
 		
 		/**
@@ -627,25 +641,13 @@ package it.sharpedge.isotope.core.components
 		 * @param	 space		 Translate in Self or World Space (if left null will be SELF)
 		 */
 		public function Translate(translation:Vector3D, space:Space = null):void
-		{
-			if(!space || space == Space.SELF)
-			{					
-				_x += translation.x;
-				_y += translation.y;
-				_z += translation.z;
-			}
-			else
-			{
-				//TODO world translate
-				//Wrong: this is translate before rotate
-				/*transformMatrix.prependTranslation(translation.x, translation.y, translation.z);
-				
-				_transform.copyColumnTo(3, _pos);
-				
-				_x = _pos.x;
-				_y = _pos.y;
-				_z = _pos.z;*/
-			}
+		{			
+			if(space == Space.WORLD)
+				translation = worldToLocalMatrix.transformVector(translation);			
+							
+			_x += translation.x;
+			_y += translation.y;
+			_z += translation.z;			
 			
 			invalidatePosition();
 		}
@@ -703,14 +705,12 @@ package it.sharpedge.isotope.core.components
 		
 		public function TransformDirection(direction:Vector3D) : Vector3D
 		{
-			//TODO transform direction
-			return null;
+			return localToWorldMatrix.deltaTransformVector(direction);
 		}
 		
 		public function TransformPoint(point:Vector3D) : Vector3D
-		{
-			//TODO transform position
-			return null;
+		{			
+			return localToWorldMatrix.transformVector(point);
 		}		
 		
 		private function invalidatePivot():void
@@ -766,12 +766,8 @@ package it.sharpedge.isotope.core.components
 		 */
 		protected function invalidateSceneTransform():void
 		{
-			_sceneTransformDirty = true;
-			_inverseSceneTransformDirty = true;
-			
-			_worldPositionDirty = true;
-			_worldRotationDirty = true;
-			_worldScaleDirty = true;
+			_localToWorldTransformDirty = true;
+			_worldToLocalTransformDirty = true;
 		}
 		
 		private function updateTransform():void
@@ -814,18 +810,18 @@ package it.sharpedge.isotope.core.components
 		private function updateSceneTransform():void
 		{
 			if (_parent) {
-				_sceneTransform.copyFrom(_parent.localToWorldMatrix);
-				_sceneTransform.prepend(transformMatrix);
+				_localToWorldTransform.copyFrom(_parent.localToWorldMatrix);
+				_localToWorldTransform.prepend(transformMatrix);
 			} else
-				_sceneTransform.copyFrom(transformMatrix);
+				_localToWorldTransform.copyFrom(transformMatrix);
 			
-			_sceneTransformDirty = false;
+			_localToWorldTransformDirty = false;
 		}
 		
 		
 		private function notifySceneTransformChange():void
 		{
-			if (_sceneTransformDirty)
+			if (_localToWorldTransformDirty)
 				return;
 			
 			invalidateSceneTransform();

@@ -4,37 +4,37 @@ package it.sharpedge.isotope.core.systems
 	import flash.events.Event;
 	import flash.geom.Vector3D;
 	
-	import Box2D.Common.Math.b2Vec2;
-	import Box2D.Dynamics.b2Body;
-	import Box2D.Dynamics.b2DebugDraw;
-	import Box2D.Dynamics.b2Fixture;
-	import Box2D.Dynamics.b2World;
-	
 	import away3d.core.math.MathConsts;
 	
 	import it.sharpedge.isotope.core.System;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
 	import it.sharpedge.isotope.core.components.Transform;
-	import it.sharpedge.isotope.core.components.physics2d.box2d.RigidBody2D;
-	import it.sharpedge.isotope.core.components.physics2d.box2d.colliders.Collider2D;
+	import it.sharpedge.isotope.core.components.physics2d.nape.RigidBody2D;
+	import it.sharpedge.isotope.core.components.physics2d.nape.colliders.Collider2D;
 	import it.sharpedge.isotope.core.lists.NodeList;
-	import it.sharpedge.isotope.core.nodes.Box2DNode;
-	import it.sharpedge.isotope.core.nodes.Collider2DNode;
+	import it.sharpedge.isotope.core.nodes.NapeColNode;
+	import it.sharpedge.isotope.core.nodes.NapeRBNode;
+	
+	import nape.geom.Vec2;
+	import nape.shape.Shape;
+	import nape.shape.ShapeList;
+	import nape.space.Space;
+	import nape.util.BitmapDebug;
 	
 	use namespace isotopeInternal;
 	//TODO dispose
-	public class Box2DPhysicsSystem extends System
+	public class Nape2DPhysicsSystem extends System
 	{
 	
 		private static const DELTA_TIME : Number = 1/30;
 		private static const ITERATIONS : Number = 5;
 		
-		private var world:b2World;
+		private var world:Space;
 		
-		[Inject(nodeType="it.sharpedge.isotope.core.nodes.Collider2DNode"]
+		[Inject(nodeType="it.sharpedge.isotope.core.nodes.NapeColNode"]
 		public var colNodes : NodeList;
 		
-		[Inject(nodeType="it.sharpedge.isotope.core.nodes.Box2DNode"]
+		[Inject(nodeType="it.sharpedge.isotope.core.nodes.NapeRBNode"]
 		public var rbNodes : NodeList;
 		
 		[Inject(name="MainView")]
@@ -42,9 +42,9 @@ package it.sharpedge.isotope.core.systems
 		
 		private var accumulator : Number = 0;
 		
-		private var tcolNode : Collider2DNode;
-		private var trbNode : Box2DNode;
-		private var tPos : b2Vec2;
+		private var tcolNode : NapeColNode;
+		private var trbNode : NapeRBNode;
+		private var tPos : Vec2;
 		private var tVecPos : Vector3D;
 		private var tVecRot : Vector3D;
 		
@@ -70,12 +70,12 @@ package it.sharpedge.isotope.core.systems
 		}
 
 		private var debugSprite : Sprite;
-		private var dbgDraw:b2DebugDraw;
+		private var dbgDraw:BitmapDebug;
 		
 		[PostConstruct]
 		public function init() : void
 		{			
-			world = new b2World(new b2Vec2(0,-9.8), true);
+			world = new Space(new Vec2(0,600));
 
 			for( tcolNode = colNodes.head; tcolNode; tcolNode = tcolNode.next )
 			{
@@ -92,14 +92,10 @@ package it.sharpedge.isotope.core.systems
 			rbNodes.nodeRemoved.add( onRigidBodyRemoved );
 		}
 		
-		private function onRigidBodyAdded(node : Box2DNode) : void
-		{	
-			var rigidBody : RigidBody2D = node.rigidBody;
-					
-			rigidBody.body = world.CreateBody(rigidBody.GetBodyDef());			
-			
+		private function onRigidBodyAdded(node : NapeRBNode) : void
+		{				
 			//Find all Colliders children of the gameobject containing the RigidBody and Apply if match
-			searchAndApplyCollidersInChildren(node.gameObject.transform, rigidBody);
+			searchAndApplyCollidersInChildren(node.gameObject.transform, node.rigidBody);
 		}
 		
 		private function searchAndApplyCollidersInChildren(transform : Transform, rigidBody : RigidBody2D):void
@@ -107,11 +103,13 @@ package it.sharpedge.isotope.core.systems
 			var colliders : Vector.<Collider2D>;
 			var tRB : RigidBody2D;			
 			
+			rigidBody.body.space = world;
+			
 			colliders = transform.gameObject.GetComponents(Collider2D) as Vector.<Collider2D>;
 			
 			for each(var collider : Collider2D in colliders)
 			{
-				applyCollider2RigidBody(collider, rigidBody);
+				applyCollider2RigidBody(collider.shape, rigidBody);
 			}
 			
 			for each(var child : Transform in transform.children)
@@ -126,68 +124,50 @@ package it.sharpedge.isotope.core.systems
 		}
 		
 		
-		private function onRigidBodyRemoved(node : Box2DNode) : void
+		private function onRigidBodyRemoved(node : NapeRBNode) : void
 		{
-			var body : b2Body = node.rigidBody.body;
-			
-			var fixture : b2Fixture = body.GetFixtureList();
-			var tFixture : b2Fixture;		
+			var shapes : ShapeList = node.rigidBody.body.shapes;
+				
 			
 			//reassign colliders to parent rigidbody if there is one
 			//Start from the parent to avoid false positive
 			var parentRB : RigidBody2D = node.gameObject.transform.parent.gameObject.GetComponentInParent(RigidBody2D) as RigidBody2D;
 			
-			while(fixture)
-			{
-				tFixture = fixture;
-				fixture = fixture.GetNext();
-				
+			while(shapes.length)
+			{				
 				if(parentRB)
-					applyCollider2RigidBody(tFixture.GetUserData() as Collider2D, parentRB);
+					applyCollider2RigidBody(shapes.pop(), parentRB);
 				else
-					removeCollider2RigidBody(tFixture.GetUserData() as Collider2D);
+					removeCollider2RigidBody(shapes.pop());
 			}
 			
-			//Destroy Box2D Body
-			world.DestroyBody(body);
+			node.rigidBody.body.space = null;
 		}
 		
-		private function onColliderAdded(node : Collider2DNode) : void
+		private function onColliderAdded(node : NapeColNode) : void
 		{				
-			var rigidBody : RigidBody2D;			
-			
 			//Find first RigiBody parent of the gameobject containing the Collider and create Fixture
 
-			rigidBody = node.gameObject.GetComponentInParent(RigidBody2D) as RigidBody2D;
+			var rigidBody : RigidBody2D = node.gameObject.GetComponentInParent(RigidBody2D) as RigidBody2D;
 			if(rigidBody)
 			{
-				applyCollider2RigidBody(node.collider, rigidBody);
+				applyCollider2RigidBody(node.collider.shape, rigidBody);
 			}					
 		}	
 		
-		private function onColliderRemoved(node : Collider2DNode) : void
+		private function onColliderRemoved(node : NapeColNode) : void
 		{
-			removeCollider2RigidBody(node.collider);
+			removeCollider2RigidBody(node.collider.shape);
 		}
 		
-		private function applyCollider2RigidBody(collider:Collider2D, rigidBody:RigidBody2D):void
-		{
-			//If it's assigned to another body destroy first			
-			removeCollider2RigidBody(collider);
-			
-			collider.fixture = rigidBody.body.CreateFixture(collider.GetFixtureDef());
+		private function applyCollider2RigidBody(shape:Shape, rigidBody:RigidBody2D):void
+		{			
+			shape.body = rigidBody.body;
 		}
 		
-		private function removeCollider2RigidBody(collider:Collider2D):void
+		private function removeCollider2RigidBody(shape:Shape):void
 		{
-			var fixt : b2Fixture = collider.fixture;
-			//If the Collider belongs to a RigidBody delete the Fixture
-			if(fixt)
-			{
-				fixt.SetUserData(null);
-				fixt.GetBody().DestroyFixture(fixt);
-				collider.fixture = null;
-			}
+			shape.body = null;
 		}
 		
 		
@@ -197,19 +177,18 @@ package it.sharpedge.isotope.core.systems
 			
 			while ( accumulator >= DELTA_TIME)
 			{
-				world.Step(DELTA_TIME, ITERATIONS, ITERATIONS);
+				world.step(DELTA_TIME, ITERATIONS, ITERATIONS);
 				accumulator -= DELTA_TIME;
 			}
-			
-			world.ClearForces();
+
 			
 			for ( trbNode = rbNodes.head; trbNode; trbNode = trbNode.next )
 			{	
-				if(!trbNode.rigidBody.body.IsActive() || trbNode.rigidBody.static)
+				if(trbNode.rigidBody.body.isSleeping || trbNode.rigidBody.static)
 					continue;
 				
 				//Set Position
-				tPos = trbNode.rigidBody.body.GetPosition();
+				tPos = trbNode.rigidBody.body.position;
 				
 				tVecPos = trbNode.transform.position;
 				tVecPos.x = tPos.x;
@@ -219,52 +198,43 @@ package it.sharpedge.isotope.core.systems
 				
 				//Set Rotation
 				tVecRot = trbNode.transform.rotation;				
-				tVecRot.z = trbNode.rigidBody.body.GetAngle() * MathConsts.RADIANS_TO_DEGREES;
+				tVecRot.z = trbNode.rigidBody.body.rotation * MathConsts.RADIANS_TO_DEGREES;
 				
 				trbNode.transform.rotation = tVecRot;
 			}
 			
 			if(_debugEnabled)
-				world.DrawDebugData();
+				dbgDraw.clear();
+				dbgDraw.draw(world);
+				dbgDraw.flush();
 			
 		}
 		
 		private function enableDebug():void
 		{			
 			if(!dbgDraw)
-			{
-				//debugSprite is some sprite that we want to draw our debug shapes into.
-				debugSprite = new Sprite();
-				
-				
+			{				
 				// set debug draw
-				dbgDraw = new b2DebugDraw();
-				
-				dbgDraw.SetSprite(debugSprite);
-				dbgDraw.SetDrawScale(10.0);
-				dbgDraw.SetFillAlpha(0.3);
-				dbgDraw.SetLineThickness(1.0);
-				dbgDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
+				dbgDraw = new BitmapDebug(view.width, view.height, 0x000000, true);
 			}
 			
-			view.addChild(debugSprite);
-			world.SetDebugDraw(dbgDraw);
+			view.addChild(dbgDraw.display);
 			
 			view.stage.addEventListener(Event.RESIZE, onResizeView);
 			onResizeView();
 		}
 		
 		private function disableDebug():void
-		{
-			world.SetDebugDraw(null);
-			view.removeChild(debugSprite);
-			view.stage.removeEventListener(Event.RESIZE, onResizeView);
+		{			
+			view.removeChild(dbgDraw.display);
 		}
 		
 		private function onResizeView(e:Event=null):void
 		{
-			debugSprite.x = view.stage.stageWidth/2;
-			debugSprite.y = view.stage.stageHeight/2;
+			dbgDraw.display.x = view.stage.stageWidth/2;
+			dbgDraw.display.y = view.stage.stageHeight/2;
+			dbgDraw.display.width = view.stage.stageWidth;
+			dbgDraw.display.width = view.stage.stageHeight;
 		}
 			
 	}

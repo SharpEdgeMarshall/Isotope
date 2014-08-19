@@ -1,4 +1,4 @@
-package it.sharpedge.isotope.core.utils
+package it.sharpedge.isotope.core.utils.enums
 {
 	import it.sharpedge.isotope.core.base.Enum;
 	

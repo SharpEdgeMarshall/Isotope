@@ -62,7 +62,7 @@ package it.sharpedge.isotope.core
 		 * 
 		 * @param time The duration, in seconds, of the frame.
 		 */
-		public function Update( time : Number ) : void
+		public function Update( time : int ) : void
 		{
 			
 		}

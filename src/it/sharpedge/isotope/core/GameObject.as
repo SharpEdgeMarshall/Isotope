@@ -266,19 +266,43 @@ package it.sharpedge.isotope.core
 			return null;
 		}
 		
-		public function GetComponentsInChildren(componentType:Class) : Vector.<Component>
+		public function GetComponentInParent(componentType:Class) : Component
 		{
-			var comps : Vector.<Component> = new Vector.<Component>();			
 			var comp : Component = GetComponent(componentType);
 			
 			if(comp)
-				comps.push(comp);
+				return comp;
+			else
+			{
+				if(transform.parent)
+					return transform.parent._gameObject.GetComponentInParent(componentType);
+					
+				else
+					return null;
+				
+			}
+		}
+		
+		
+		//TODO optimize all GetComponents passing the Vector around
+		public function GetComponentsInChildren(componentType:Class) : Vector.<Component>
+		{
+			var comps : Vector.<Component> = GetComponents(componentType);			
 
 			for each(var childTransf : Transform in _transform._children)
 			{					
 				comps = comps.concat(childTransf.gameObject.GetComponentsInChildren(componentType));					
-			}
+			}			
 			
+			return comps;
+		}
+		
+		public function GetComponentsInParent(componentType:Class) : Vector.<Component>
+		{
+			var comps : Vector.<Component> = GetComponents(componentType);
+			
+			if(transform.parent)
+				comps = comps.concat(transform.parent.gameObject.GetComponentsInParent(componentType));				
 			
 			return comps;
 		}

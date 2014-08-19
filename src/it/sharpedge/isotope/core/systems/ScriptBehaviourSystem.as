@@ -104,7 +104,7 @@ package it.sharpedge.isotope.core.systems
 		}
 			
 		
-		override public function Update(time : Number) : void
+		override public function Update(time : int) : void
 		{
 			awakeNewScripts();
 			

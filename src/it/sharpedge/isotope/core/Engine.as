@@ -133,6 +133,17 @@ package it.sharpedge.isotope.core
 			system.removeFromEngine();
 		}
 		
+		public function GetSystem(type:Class) : System
+		{
+			for( var system : System = _systems.head; system; system = system.next )
+			{
+				if(system is type)
+					return system;
+			}
+			
+			return null;
+		}
+		
 		isotopeInternal function find(name:String) : GameObject
 		{
 			for each(var gObj : GameObject in _gameObjects)
@@ -163,17 +174,23 @@ package it.sharpedge.isotope.core
 		
 		private function onComponentAdded(gameObject:GameObject, component:Component) : void
 		{
+			injector.injectInto(component);
+			
+			var type : Class = Object(component).constructor;
+			
 			for each( var family : IFamily in _families )
 			{
-				family.componentAddedToGameObject( gameObject, Object(component).constructor );
+				family.componentAddedToGameObject( gameObject, type );
 			}
 		}
 		
 		private function onComponentRemoving(gameObject:GameObject, component:Component):void
 		{
+			var type : Class = Object(component).constructor;
+			
 			for each( var family : IFamily in _families )
 			{
-				family.componentRemovedFromGameObject( gameObject, Object(component).constructor );
+				family.componentRemovedFromGameObject( gameObject, type );
 			}	
 		}
 		
@@ -182,7 +199,7 @@ package it.sharpedge.isotope.core
 			
 		}
 		
-		public function update( time : Number ) : void
+		public function update( time : int ) : void
 		{
 			_updating = true;
 			for( var system : System = _systems.head; system; system = system.next )

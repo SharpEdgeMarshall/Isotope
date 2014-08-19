@@ -1,6 +1,5 @@
 package it.sharpedge.isotope.core.systems
 {
-	import away3d.cameras.Camera3D;
 	import away3d.containers.View3D;
 	
 	import it.sharpedge.isotope.core.GameObject;
@@ -87,7 +86,7 @@ package it.sharpedge.isotope.core.systems
 		}
 			
 		
-		override public function Update(time : Number) : void
+		override public function Update(time : int) : void
 		{
 			
 			for ( tCamNode = camNodes.head; tCamNode; tCamNode = tCamNode.next )

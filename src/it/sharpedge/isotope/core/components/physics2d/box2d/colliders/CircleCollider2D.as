@@ -1,4 +1,4 @@
-package it.sharpedge.isotope.core.components.colliders
+package it.sharpedge.isotope.core.components.physics2d.box2d.colliders
 {
 	import it.sharpedge.isotope.core.Component;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
