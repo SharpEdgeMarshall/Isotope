@@ -3,6 +3,7 @@ package it.sharpedge.isotope.core.components.physics2d.nape
 	import flash.geom.Vector3D;
 	
 	import it.sharpedge.isotope.core.Component;
+	import it.sharpedge.isotope.core.GameObject;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
 	import it.sharpedge.isotope.core.utils.enums.ForceMode2D;
 	
@@ -118,7 +119,7 @@ package it.sharpedge.isotope.core.components.physics2d.nape
 		public function RigidBody2D()
 		{
 			super(getComponentAccess(), "RigidBody2D");
-			body = new Body(BodyType.DYNAMIC, Vec2.weak(transform.position.x, transform.position.y));
+			body = new Body(BodyType.DYNAMIC);
 		}
 		
 		public function AddImpulse(force:Vector3D):void
@@ -139,6 +140,13 @@ package it.sharpedge.isotope.core.components.physics2d.nape
 		public function AddTorque(torque:Number):void
 		{			
 			body.applyAngularImpulse(torque);
+		}
+		
+		override isotopeInternal function setGameObject(value:GameObject):void
+		{
+			super.setGameObject(value);
+			
+			body.position = Vec2.weak(value.transform.position.x, value.transform.position.y)
 		}
 		
 		override isotopeInternal function dispose():void

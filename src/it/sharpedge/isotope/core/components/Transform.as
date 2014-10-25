@@ -1,7 +1,6 @@
 package it.sharpedge.isotope.core.components
 {
 	import flash.geom.Matrix3D;
-	import flash.geom.Orientation3D;
 	import flash.geom.Vector3D;
 	
 	import away3d.core.math.MathConsts;
@@ -290,6 +289,7 @@ package it.sharpedge.isotope.core.components
 			if(_localToWorldTransformDirty)
 			{
 				_worldRot = localToWorldMatrix.decompose()[1];
+				_worldRot.scaleBy(MathConsts.RADIANS_TO_DEGREES);
 			}
 			
 			return _worldRot;

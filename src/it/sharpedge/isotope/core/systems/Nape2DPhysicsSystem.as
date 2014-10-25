@@ -75,7 +75,7 @@ package it.sharpedge.isotope.core.systems
 		[PostConstruct]
 		public function init() : void
 		{			
-			world = new Space(new Vec2(0,600));
+			world = new Space(new Vec2(0,0));
 
 			for( tcolNode = colNodes.head; tcolNode; tcolNode = tcolNode.next )
 			{
@@ -203,10 +203,12 @@ package it.sharpedge.isotope.core.systems
 				trbNode.transform.rotation = tVecRot;
 			}
 			
-			if(_debugEnabled)
+			if(_debugEnabled) {
+				
 				dbgDraw.clear();
 				dbgDraw.draw(world);
 				dbgDraw.flush();
+			}
 			
 		}
 		
@@ -215,7 +217,7 @@ package it.sharpedge.isotope.core.systems
 			if(!dbgDraw)
 			{				
 				// set debug draw
-				dbgDraw = new BitmapDebug(view.width, view.height, 0x000000, true);
+				dbgDraw = new BitmapDebug(view.stage.stageWidth, view.stage.stageHeight, 0xFFFFFF, false);
 			}
 			
 			view.addChild(dbgDraw.display);
@@ -231,10 +233,10 @@ package it.sharpedge.isotope.core.systems
 		
 		private function onResizeView(e:Event=null):void
 		{
-			dbgDraw.display.x = view.stage.stageWidth/2;
-			dbgDraw.display.y = view.stage.stageHeight/2;
-			dbgDraw.display.width = view.stage.stageWidth;
-			dbgDraw.display.width = view.stage.stageHeight;
+			dbgDraw.display.x = view.stage.fullScreenWidth/2;
+			dbgDraw.display.y = view.stage.fullScreenHeight/2;
+			dbgDraw.display.width = view.stage.fullScreenWidth;
+			dbgDraw.display.width = view.stage.fullScreenHeight;
 		}
 			
 	}
