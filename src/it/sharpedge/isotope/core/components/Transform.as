@@ -5,7 +5,7 @@ package it.sharpedge.isotope.core.components
 	
 	import away3d.core.math.MathConsts;
 	
-	import it.sharpedge.isotope.core.Component;
+	import it.sharpedge.isotope.core.base.Component;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
 	import it.sharpedge.isotope.core.math.Matrix3DUtils;
 	import it.sharpedge.isotope.core.utils.enums.Space;

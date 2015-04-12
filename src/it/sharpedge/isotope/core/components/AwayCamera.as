@@ -7,7 +7,7 @@ package it.sharpedge.isotope.core.components
 	import away3d.cameras.lenses.OrthographicLens;
 	import away3d.cameras.lenses.PerspectiveLens;
 	
-	import it.sharpedge.isotope.core.Behaviour;
+	import it.sharpedge.isotope.core.base.Behaviour;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
 	import it.sharpedge.isotope.core.utils.enums.CameraType;
 	

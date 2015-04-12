@@ -2,7 +2,7 @@ package it.sharpedge.isotope.core.components
 {
 	import flash.utils.getQualifiedClassName;
 	
-	import it.sharpedge.isotope.core.Behaviour;
+	import it.sharpedge.isotope.core.base.Behaviour;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
 
 	public class ScriptBehaviour extends Behaviour

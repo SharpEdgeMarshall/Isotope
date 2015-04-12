@@ -1,6 +1,5 @@
 package it.sharpedge.isotope.core.base
 {
-	import it.sharpedge.isotope.core.Component;
 	import it.sharpedge.isotope.core.GameObject;
 	import it.sharpedge.isotope.core.components.ScriptsContainer;
 	import it.sharpedge.isotope.core.components.Transform;

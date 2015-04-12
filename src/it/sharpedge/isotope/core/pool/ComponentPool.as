@@ -2,7 +2,7 @@ package it.sharpedge.isotope.core.pool
 {
 	import flash.utils.Dictionary;
 	
-	import it.sharpedge.isotope.core.Component;
+	import it.sharpedge.isotope.core.base.Component;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
 
 	use namespace isotopeInternal;

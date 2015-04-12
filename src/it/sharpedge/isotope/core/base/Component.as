@@ -1,10 +1,9 @@
-package it.sharpedge.isotope.core
+package it.sharpedge.isotope.core.base
 {
 	import flash.errors.IllegalOperationError;
 	
-	import it.sharpedge.isotope.core.base.IsotopeObject;
-	import it.sharpedge.isotope.core.base.isotopeInternal;
 	import it.sharpedge.isotope.core.components.Transform;
+	import it.sharpedge.isotope.core.GameObject;
 
 	use namespace isotopeInternal;
 	

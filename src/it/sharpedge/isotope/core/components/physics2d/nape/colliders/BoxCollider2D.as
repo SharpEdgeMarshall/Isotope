@@ -2,7 +2,7 @@ package it.sharpedge.isotope.core.components.physics2d.nape.colliders
 {
 	import flash.geom.Vector3D;
 	
-	import it.sharpedge.isotope.core.Component;
+	import it.sharpedge.isotope.core.base.Component;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
 	
 	import nape.phys.Body;
@@ -70,7 +70,6 @@ package it.sharpedge.isotope.core.components.physics2d.nape.colliders
 		
 		private function updateMeasures():void
 		{
-
 			if(shape && shape.body)
 			{
 				var bd : Body = shape.body;

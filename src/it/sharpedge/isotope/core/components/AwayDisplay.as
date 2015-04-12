@@ -2,7 +2,7 @@ package it.sharpedge.isotope.core.components
 {
 	import away3d.containers.ObjectContainer3D;
 	
-	import it.sharpedge.isotope.core.Component;
+	import it.sharpedge.isotope.core.base.Component;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
 	
 	import org.osflash.signals.Signal;

@@ -12,6 +12,7 @@ package it.sharpedge.isotope.core
 	import it.sharpedge.isotope.core.pool.ComponentPool;
 	
 	import org.osflash.signals.Signal;
+	import it.sharpedge.isotope.core.base.Component;
 
 	use namespace isotopeInternal;
 	

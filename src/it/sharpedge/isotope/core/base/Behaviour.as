@@ -1,6 +1,5 @@
-package it.sharpedge.isotope.core
+package it.sharpedge.isotope.core.base
 {
-	import it.sharpedge.isotope.core.base.isotopeInternal;
 	
 	import org.osflash.signals.Signal;
 

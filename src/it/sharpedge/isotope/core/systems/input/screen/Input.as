@@ -26,6 +26,13 @@ package it.sharpedge.isotope.core.systems.input.screen
 		private static var _beginnedTouches : Vector.<int> = new Vector.<int>();
 		private static var _movedTouches : Vector.<int> = new Vector.<int>();
 		
+		
+		//DEBUG
+		public static function get view():Sprite
+		{
+			return _view;
+		}
+		
 		public static function get accelerometerEnabled():Boolean
 		{
 			return _accelerometerEnabled;

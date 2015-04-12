@@ -14,6 +14,7 @@ package it.sharpedge.isotope.core
 	
 	import org.osflash.signals.Signal;
 	import org.swiftsuspenders.Injector;
+	import it.sharpedge.isotope.core.base.Component;
 
 	use namespace isotopeInternal;
 	

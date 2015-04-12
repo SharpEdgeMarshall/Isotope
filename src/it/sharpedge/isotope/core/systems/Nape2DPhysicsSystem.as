@@ -15,6 +15,7 @@ package it.sharpedge.isotope.core.systems
 	import it.sharpedge.isotope.core.nodes.NapeColNode;
 	import it.sharpedge.isotope.core.nodes.NapeRBNode;
 	
+	import nape.geom.Mat23;
 	import nape.geom.Vec2;
 	import nape.shape.Shape;
 	import nape.shape.ShapeList;
@@ -41,6 +42,7 @@ package it.sharpedge.isotope.core.systems
 		public var view : Sprite;
 		
 		private var accumulator : Number = 0;
+		private var steps : int = 0;
 		
 		private var tcolNode : NapeColNode;
 		private var trbNode : NapeRBNode;
@@ -174,11 +176,24 @@ package it.sharpedge.isotope.core.systems
 		override public function Update(time : int) : void
 		{
 			accumulator += time * 0.001;
+			steps = 0;
+
+			for ( trbNode = rbNodes.head; trbNode; trbNode = trbNode.next )
+			{
+				if(trbNode.rigidBody.static)
+					continue;
+				
+				tVecPos = trbNode.transform.position;
+				
+				trbNode.rigidBody.body.position = new Vec2(tVecPos.x, tVecPos.y);
+				trbNode.rigidBody.body.rotation = trbNode.transform.rotation.z * MathConsts.DEGREES_TO_RADIANS;
+			}
 			
-			while ( accumulator >= DELTA_TIME)
+			while ( accumulator >= DELTA_TIME && steps < 5 )
 			{
 				world.step(DELTA_TIME, ITERATIONS, ITERATIONS);
 				accumulator -= DELTA_TIME;
+				steps++;
 			}
 
 			
@@ -208,6 +223,7 @@ package it.sharpedge.isotope.core.systems
 				dbgDraw.clear();
 				dbgDraw.draw(world);
 				dbgDraw.flush();
+				
 			}
 			
 		}
@@ -217,7 +233,7 @@ package it.sharpedge.isotope.core.systems
 			if(!dbgDraw)
 			{				
 				// set debug draw
-				dbgDraw = new BitmapDebug(view.stage.stageWidth, view.stage.stageHeight, 0xFFFFFF, false);
+				dbgDraw = new BitmapDebug(view.stage.stageWidth, view.stage.stageHeight, 0xFFFFFF, true);
 			}
 			
 			view.addChild(dbgDraw.display);
@@ -229,14 +245,14 @@ package it.sharpedge.isotope.core.systems
 		private function disableDebug():void
 		{			
 			view.removeChild(dbgDraw.display);
+			view.stage.removeEventListener(Event.RESIZE, onResizeView);
 		}
 		
 		private function onResizeView(e:Event=null):void
 		{
-			dbgDraw.display.x = view.stage.fullScreenWidth/2;
-			dbgDraw.display.y = view.stage.fullScreenHeight/2;
 			dbgDraw.display.width = view.stage.fullScreenWidth;
-			dbgDraw.display.width = view.stage.fullScreenHeight;
+			dbgDraw.display.width = view.stage.fullScreenHeight;		
+			dbgDraw.transform = Mat23.translation(view.stage.fullScreenWidth/2, view.stage.fullScreenHeight/2);
 		}
 			
 	}

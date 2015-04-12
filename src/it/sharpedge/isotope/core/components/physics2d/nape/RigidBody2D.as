@@ -2,7 +2,7 @@ package it.sharpedge.isotope.core.components.physics2d.nape
 {
 	import flash.geom.Vector3D;
 	
-	import it.sharpedge.isotope.core.Component;
+	import it.sharpedge.isotope.core.base.Component;
 	import it.sharpedge.isotope.core.GameObject;
 	import it.sharpedge.isotope.core.base.isotopeInternal;
 	import it.sharpedge.isotope.core.utils.enums.ForceMode2D;
@@ -124,12 +124,12 @@ package it.sharpedge.isotope.core.components.physics2d.nape
 		
 		public function AddImpulse(force:Vector3D):void
 		{			
-			body.applyImpulse(Vec2.get(force.x, force.y));				
+			body.applyImpulse(Vec2.get(force.x, force.y, true));				
 		}
 		
 		public function AddImpulseAtPosition(force:Vector3D, position:Vector3D):void
 		{			
-			body.applyImpulse(Vec2.get(force.x, force.y), Vec2.get(position.x, position.y));			
+			body.applyImpulse(Vec2.get(force.x, force.y, true), Vec2.get(position.x, position.y, true));			
 		}
 		
 		public function AddRelativeForce(force:Vector3D, mode:ForceMode2D):void
